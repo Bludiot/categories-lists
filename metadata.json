@@ -1,11 +1,13 @@
 {
-	"name": "Categories Lists",
-	"author": "Bludiot",
-	"email": "",
-	"website": "https://github.com/Bludiot/categories-lists",
-	"version": "1.0.0",
-	"releaseDate": "",
-	"license": "",
-	"compatible": "3.15.0",
-	"notes": ""
+	"name"         : "Categories Lists",
+	"author"       : "Bludiot",
+	"email"        : "",
+	"website"      : "https://github.com/Bludiot/categories-lists",
+	"version"      : "1.0.0",
+	"releaseDate"  : "",
+	"license"      : "",
+	"compatible"   : "3.16.0",
+	"notes"        : "",
+	"theme_desc"   : "The Categories Lists plugin improves upon the default Bludit categories plugin with many display options for the site sidebar. The active theme may also add categories to the 404 error page.",
+	"theme_compat" : [ "configureight" ]
 }

@@ -152,6 +152,30 @@ class Categories_Lists extends Plugin {
 	 * @access public
 	 * @return string Returns the head content.
 	 */
+	public function adminBodyEnd() {
+
+		// Access global variables.
+		global $L, $url;
+
+		// Settings page URL.
+		$settings = DOMAIN_ADMIN . 'configure-plugin/' . $this->className() . '#options';
+
+		if ( checkRole( [ 'admin' ], false ) && 'categories' == $url->slug() ) {
+			return sprintf(
+				'<script>$( "table" ).before( "<div class=\'alert alert-primary alert-search-forms\' role=\'alert\'><p class=\'m-0\'><a href=\'%s\'>%s</a></p></div>");</script>',
+				$settings,
+				$L->get( 'Categories widget options' )
+			);
+		}
+	}
+
+	/**
+	 * Head section
+	 *
+	 * @since  1.0.0
+	 * @access public
+	 * @return string Returns the head content.
+	 */
 	public function siteHead() {
 
 		$html = '<style>';

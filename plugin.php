@@ -18,7 +18,8 @@ if ( ! defined( 'BLUDIT' ) ) {
 
 // Access namespaced functions.
 use function CatLists\{
-	sidebar_list
+	sidebar_list,
+	count_cats
 };
 
 class Categories_Lists extends Plugin {
@@ -84,13 +85,16 @@ class Categories_Lists extends Plugin {
 		global $L;
 
 		$this->dbFields = [
-			'in_sidebar' => true,
-			'label'      => $L->get( 'Categories' ),
-			'label_wrap' => 'h2',
-			'hide_empty' => true,
-			'sort_by'    => 'abc',
-			'post_count' => true,
-			'list_view'  => 'vert'
+			'in_sidebar'  => true,
+			'label'       => $L->get( 'Categories' ),
+			'label_wrap'  => 'h2',
+			'hide_empty'  => true,
+			'display'     => 'all',
+			'sort_by'     => 'abc',
+			'post_count'  => true,
+			'cats_select' => ['foobar'],
+			'cats_sort'   => 'foobar',
+			'list_view'   => 'vert'
 		];
 
 		if ( ! $this->installed() ) {
@@ -98,6 +102,83 @@ class Categories_Lists extends Plugin {
 			$this->db = $Tmp->db;
 			$this->prepare();
 		}
+	}
+
+	/**
+	 * Install plugin
+	 *
+	 * @since  1.0.0
+	 * @access public
+	 * @param  integer $position
+	 * @return boolean Return true if the installation is successful.
+	 */
+	public function install( $position = 100 ) {
+
+		// Create plugin directory for the database
+		mkdir( PATH_PLUGINS_DATABASES . $this->directoryName, DIR_PERMISSIONS, true );
+
+		$this->dbFields['position'] = $position;
+
+		// Sanitize default values to store in the file.
+		foreach ( $this->dbFields as $key => $value ) {
+
+			if ( is_array( $value ) ) {
+				$final_value = $value;
+			} else {
+				$value = Sanitize :: html( $value );
+			}
+			settype( $value, gettype( $this->dbFields[$key] ) );
+			$this->db[$key] = $value;
+		}
+
+		// Create the database.
+		return $this->save();
+	}
+
+	/**
+	 * Form post
+	 *
+	 * The form `$_POST` method.
+	 *
+	 * Essentially the same as the parent method
+	 * except that it allows for array field values.
+	 *
+	 * This was implemented to handle multi-checkbox
+	 * and radio button fields. If strings are used
+	 * in an array option then be sure to sanitize
+	 * the string values.
+	 *
+	 * @since  1.0.0
+	 * @access public
+	 * @return void
+	 */
+	public function post() {
+
+		$args = $_POST;
+
+		foreach ( $this->dbFields as $field => $value ) {
+
+			if ( isset( $args[$field] ) ) {
+
+				// @todo Look into sanitizing array values.
+				if ( is_array( $args[$field] ) ) {
+					$final_value = $args[$field];
+				} else {
+					$final_value = Sanitize :: html( $args[$field] );
+				}
+
+				if ( $final_value === 'false' ) {
+					$final_value = false;
+				} elseif ( $final_value === 'true' ) {
+					$final_value = true;
+				}
+
+				settype( $final_value, gettype( $value ) );
+				$this->db[$field] = $final_value;
+			}
+		}
+
+		return $this->save();
 	}
 
 	/**
@@ -178,10 +259,12 @@ class Categories_Lists extends Plugin {
 	 */
 	public function siteHead() {
 
-		$html = '<style>';
-		$html .= '.inline-taxonomy-list { list-style: none; display: inline-flex; flex-direction: row; flex-wrap: wrap; gap: 0 0.5em; }';
-		$html .= '</style>';
-
+		$html = '';
+		if ( 'horz' == $this->list_view() ) {
+			$html .= '<style>';
+			$html .= '.inline-taxonomy-list { list-style: none; display: inline-flex; flex-direction: row; flex-wrap: wrap; gap: 0 0.5em; }';
+			$html .= '</style>';
+		}
 		return $html;
 	}
 
@@ -194,6 +277,12 @@ class Categories_Lists extends Plugin {
 	 */
 	public function siteSidebar() {
 
+		// No list if no categories created.
+		if ( count_cats() == 0 ) {
+			return false;
+		}
+
+		// Print the list if the option is set.
 		if ( $this->in_sidebar() ) {
 			return sidebar_list();
 		}
@@ -228,6 +317,11 @@ class Categories_Lists extends Plugin {
 	}
 
 	// @return string
+	public function display() {
+		return $this->getValue( 'display' );
+	}
+
+	// @return string
 	public function sort_by() {
 		return $this->getValue( 'sort_by' );
 	}
@@ -235,6 +329,16 @@ class Categories_Lists extends Plugin {
 	// @return boolean
 	public function post_count() {
 		return $this->getValue( 'post_count' );
+	}
+
+	// @return array
+	public function cats_select() {
+		return $this->getValue( 'cats_select' );
+	}
+
+	// @return string
+	public function cats_sort() {
+		return $this->getValue( 'cats_sort' );
 	}
 
 	// @return string

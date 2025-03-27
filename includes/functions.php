@@ -16,18 +16,145 @@ if ( ! defined( 'BLUDIT' ) ) {
 }
 
 /**
+ * Plugin instance
+ *
+ * @since  1.0.0
+ * @return object
+ */
+function plugin() {
+	return new \Categories_Lists;
+}
+
+/**
+ * Categories database
+ *
+ * @since  1.0.0
+ * @global object $categories The Categories class.
+ * @return mixed False if no categories in database.
+ */
+function cats_db() {
+
+	// Access global variables.
+	global $categories;
+
+	if ( 0 == count( $categories->db ) ) {
+		return false;
+	}
+	return $categories->getDB();
+}
+
+/**
+ * Get categories
+ *
+ * Gets all available categories.
+ *
+ * @param  string $get `key`, `key_name`, or `name`
+ * @return mixed False if no categories in database.
+ */
+function get_cats( $get = 'key' ) {
+
+	// False if no categories in the database.
+	if ( 0 == count_cats() ) {
+		return false;
+	}
+
+	$cats = [];
+	foreach ( cats_db() as $key => $cat ) {
+
+		if ( 'key_name' == $get ) {
+			$entry = [ $key => $cat['name'] ];
+			$cats  = array_merge( $cats, $entry );
+		} elseif ( 'name' == $get ) {
+			$cats[] = $cat['name'];
+		} else {
+			$cats[] = $key;
+		}
+	}
+	return $cats;
+}
+
+/**
+ * Count categories
+ *
+ * Total number of categories in the
+ * database, including those not used
+ * for any post.
+ *
+ * @since  1.0.0
+ * @return integer
+ */
+function count_cats() {
+	return count( cats_db() );
+}
+
+/**
+ * Get categories by post count
+ *
+ * @since  1.0.0
+ * @global object $categories The Categories class.
+ * @return array
+ */
+function cats_by_count() {
+
+	// Access global variables.
+	global $categories;
+
+	if ( 0 == count( $categories->db ) ) {
+		return false;
+	}
+	usort( $categories->db, function( $a, $b ) {
+		return count( $a['list'] ) < count( $b['list'] );
+	} );
+	return $categories->db;
+}
+
+/**
+ * Selected categories
+ *
+ * From the checkbox list of categories in the form.
+ *
+ * @since  1.0.0
+ * @return array
+ */
+function selected_cats() {
+
+	$cats = [];
+	foreach ( plugin()->cats_select() as $key ) {
+
+		if ( ! getCategory( $key ) ) {
+			continue;
+		}
+
+		$cat = getCategory( $key );
+		$select = [
+			$key => [
+				'key'         => $key,
+				'name'        => $cat->name(),
+				'template'    => $cat->template(),
+				'description' => $cat->description(),
+				'list'        => $cat->pages()
+			]
+		];
+		$cats = array_merge( $cats, $select );
+	}
+
+	if ( 'count' == plugin()->sort_by() ) {
+		usort( $cats, function( $a, $b ) {
+			return count( $a['list'] ) < count( $b['list'] );
+		} );
+	}
+	return $cats;
+}
+
+/**
  * Categories list
  *
  * @since  1.0.0
  * @param  mixed $args Arguments to be passed.
  * @param  array $defaults Default arguments.
- * @global object $categories The Categories class.
  * @return string Returns the list markup.
  */
 function cats_list( $args = null, $defaults = [] ) {
-
-	// Access global variables.
-	global $categories;
 
 	// Default arguments.
 	$defaults = [
@@ -81,20 +208,17 @@ function cats_list( $args = null, $defaults = [] ) {
 		$args['list_class']
 	);
 
-	// Alias categories database array.
-	$cats_db = $categories->db;
-
 	// Maybe sort by post count.
 	if ( 'count' == $args['sort_by'] ) {
-		usort( $cats_db, function( $a, $b ) {
-			return count( $a['list'] ) < count( $b['list'] );
-		} );
+		$cats = cats_by_count();
+	} else {
+		$cats = cats_db();
 	}
 
-	foreach ( $cats_db as $key => $fields ) {
+	foreach ( $cats as $key => $value ) {
 
-		$get_count = count( $fields['list'] );
-		$get_name  = $fields['name'];
+		$get_count = count( $value['list'] );
+		$get_name  = $value['name'];
 
 		// Hide empty categories.
 		if ( $get_count == 0 && $args['hide_empty'] ) {
@@ -140,37 +264,100 @@ function sidebar_list() {
 	// Access global variables.
 	global $L;
 
-	// Get the plugin object.
-	$plugin = new \Categories_Lists;
+	// Selected categories, maybe sort by manual order.
+	$cats  = selected_cats();
+	$sort  = plugin()->cats_sort();
+	$order = [];
+	if ( 'select' == plugin()->display() ) {
+		if ( 'sort' == plugin()->sort_by() && ! empty( $sort ) ) {
+			$order = explode( ',', $sort );
+			if ( ! getCategory( $order[0] ) ) {
+				$order = [];
+			}
+			$cats = array_replace( array_flip( $order ), $cats );
+		}
+	// Sort by post count.
+	} elseif ( 'all' == plugin()->display() && 'count' == plugin()->sort_by() ) {
+		$cats = cats_by_count();
 
-	// Override default function arguments.
-	$args = [
-		'wrap'       => true,
-		'wrap_class' => 'list-wrap cats-list-wrap-wrap plugin plugin-cats-list'
-	];
-
-	$args['label_el'] = $plugin->label_wrap();
-
-	if ( ! empty( $plugin->label() ) ) {
-		$args['label'] = $plugin->label();
+	// Default to all categories.
+	} else {
+		$cats = cats_db();
 	}
 
-	if ( 'horz' == $plugin->list_view() ) {
-		$args['direction'] = 'horz';
+	// Label wrapping elements.
+	$get_open  = str_replace( ',', '><', plugin()->label_wrap() );
+	$get_close = str_replace( ',', '></', plugin()->label_wrap() );
+
+	$label_el_open  = "<{$get_open}>";
+	$label_el_close = "</{$get_close}>";
+
+	// List class.
+	$list_class = 'categories-list standard-taxonomy-list';
+	if ( 'horz' == plugin()->list_view() ) {
+		$list_class = 'categories-list inline-taxonomy-list';
 	}
 
-	if ( 'count' == $plugin->sort_by() ) {
-		$args['sort_by'] = 'count';
+	// List markup.
+	$html = '<div class="list-wrap cats-list-wrap-wrap plugin plugin-cats-list">';
+	if ( ! empty( plugin()->label() ) ) {
+		$html .= sprintf(
+			'%1$s%2$s%3$s',
+			$label_el_open,
+			plugin()->label(),
+			$label_el_close
+		);
 	}
-
-	if ( $plugin->post_count() ) {
-		$args['show_count'] = true;
+	if ( checkRole( [ 'admin' ], false ) && 'select' == plugin()->display() && ! selected_cats() ) {
+		$html .= sprintf(
+			'<p>%s</p></div>',
+			$L->get( 'No categories selected.' )
+		);
+		return $html;
+	} elseif ( checkRole( [ 'admin' ], false ) && 'select' == plugin()->display() && ! getCategory( $order[0] ) ) {
+		$html .= sprintf(
+			'<p>%s</p></div>',
+			$L->get( 'Sort categories to display.' )
+		);
+		return $html;
+	} elseif ( 'select' == plugin()->display() && ( ! getCategory( $order[0] ) || ! selected_cats() ) ) {
+		return;
 	}
+	$html .= sprintf(
+		'<ul class="%s">',
+		$list_class
+	);
 
-	if ( ! $plugin->hide_empty() ) {
-		$args['hide_empty'] = false;
+	// List entries.
+	foreach ( $cats as $key => $value ) {
+
+		if ( ! array_key_exists( 'name', $value ) ) {
+			continue;
+		}
+
+		$get_count = count( $value['list'] );
+		$get_name  = $value['name'];
+
+		// Hide empty categories.
+		if ( $get_count == 0 && plugin()->hide_empty() ) {
+			continue;
+		}
+
+		$name = $get_name;
+		if ( plugin()->post_count() ) {
+			$name = sprintf(
+				'%s (%s)',
+				$get_name,
+				$get_count
+			);
+		}
+		$html .= sprintf(
+			'<li><a href="%s">%s</li>',
+			DOMAIN_CATEGORIES . $key,
+			$name
+		);
 	}
+	$html .= '</ul></div>';
 
-	// Return a modified list.
-	return cats_list( $args );
+	return $html;
 }

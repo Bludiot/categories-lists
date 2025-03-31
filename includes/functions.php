@@ -352,7 +352,7 @@ function sidebar_list() {
 			);
 		}
 		$html .= sprintf(
-			'<li><a href="%s">%s</li>',
+			'<li><a href="%s">%s</a></li>',
 			DOMAIN_CATEGORIES . $key,
 			$name
 		);

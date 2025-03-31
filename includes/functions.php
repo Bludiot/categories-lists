@@ -301,12 +301,16 @@ function sidebar_list() {
 	// List markup.
 	$html = '<div class="list-wrap cats-list-wrap-wrap plugin plugin-cats-list">';
 	if ( ! empty( plugin()->label() ) ) {
-		$html .= sprintf(
-			'%1$s%2$s%3$s',
-			$label_el_open,
-			plugin()->label(),
-			$label_el_close
-		);
+		if ( plugin()->label_wrap() ) {
+			$html .= sprintf(
+				'%1$s%2$s%3$s',
+				$label_el_open,
+				plugin()->label(),
+				$label_el_close
+			);
+		} else {
+			$html .= plugin()->label();
+		}
 	}
 	if ( checkRole( [ 'admin' ], false ) && 'select' == plugin()->display() && ! selected_cats() ) {
 		$html .= sprintf(

@@ -16,10 +16,7 @@ use function CatLists\{
 };
 
 // Guide page URL.
-$guide_page = DOMAIN_ADMIN . 'plugin/Categories_Lists';
-
-// Tags page URL.
-$tags_page = DOMAIN_ADMIN . 'configure-plugin/Tags_Lists';
+$guide_page = DOMAIN_ADMIN . 'plugin/' . $this->className();
 
 if ( count_cats() == 0 ) {
 	printf(
@@ -67,7 +64,7 @@ if ( count_cats() == 0 ) {
 }
 </style>
 <div class="alert alert-primary alert-cats-list" role="alert">
-	<p class="m-0"><?php $L->p( "Go to the <a href='{$guide_page}'>categories lists guide</a> page." ); if ( getPlugin( 'Tags_Lists' ) ) { echo ' '; $L->p( "Go to the <a href='{$tags_page}'>tags settings</a> page." ); } ?></p>
+	<p class="m-0"><?php $L->p( "Go to the <a href='{$guide_page}'>categories lists guide</a> page." ); ?></p>
 </div>
 
 <fieldset class="mt-4">

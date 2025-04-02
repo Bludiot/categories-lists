@@ -9,7 +9,7 @@
  */
 
 // Form page URL.
-$form_page = DOMAIN_ADMIN . 'configure-plugin/Categories_Lists';
+$form_page = DOMAIN_ADMIN . 'configure-plugin/' . $this->className();
 
 ?>
 <style>

@@ -126,9 +126,8 @@ if ( count_cats() == 0 ) {
 				<?php
 				foreach ( get_cats( 'key_name' ) as $cat => $name ) {
 					printf(
-						'<label class="check-label-wrap" for="cat-%s" title="%s"><input type="checkbox" name="cats_select[]" id="cat-%s" value="%s" %s /> %s</label>',
+						'<label class="check-label-wrap" for="cat-%s"><input type="checkbox" name="cats_select[]" id="cat-%s" value="%s" %s /> %s</label>',
 						$cat,
-						$title,
 						$cat,
 						$cat,
 						( is_array( $this->cats_select() ) && in_array( $cat, $this->cats_select() ) ? 'checked' : '' ),

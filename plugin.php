@@ -97,6 +97,11 @@ class Categories_Lists extends Plugin {
 			'list_view'   => 'vert'
 		];
 
+		// Array of custom hooks.
+		$this->customHooks = [
+			'categories_list'
+		];
+
 		if ( ! $this->installed() ) {
 			$Tmp = new dbJSON( $this->filenameDb );
 			$this->db = $Tmp->db;
@@ -344,5 +349,19 @@ class Categories_Lists extends Plugin {
 	// @return string
 	public function list_view() {
 		return $this->getValue( 'list_view' );
+	}
+
+	/**
+	 * Custom hook
+	 *
+	 * Prints the sidebar default list by
+	 * calling the `categories_list' hook.
+	 *
+	 * @since  1.0.0
+	 * @access private
+	 * @return string Returns the form markup.
+	 */
+	public function categories_list() {
+		return sidebar_list();
 	}
 }

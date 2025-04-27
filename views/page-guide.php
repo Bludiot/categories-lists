@@ -65,6 +65,14 @@ $defaults = [
 
 <pre lang="PHP">&lt;?php CatLists\cats_list(); ?&gt;</pre>
 
+<p><?php $L->p( 'The default list can also be displayed using the <code>categories_list</code> custom hook.' ); ?></p>
+
+<?php if ( defined( 'BLUDIT_VERSION' ) && BLUDIT_VERSION >= 4 ) : ?>
+<pre lang="PHP">&lt;?php HTML::execPluginsByHook( 'categories_list' ); ?&gt;</pre>
+<?php else : ?>
+<pre lang="PHP">&lt;?php Theme::plugins( 'categories_list' ); ?&gt;</pre>
+<?php endif; ?>
+
 <p><?php $L->p( 'The following example demonstrates the addition of a list label.' ); ?></p>
 
 <pre lang="PHP">&lt;?php CatLists\cats_list( [ 'label' => $L->get( '<?php $L->p( 'Content Types' ) ?>' ) ] ); ?&gt;</pre>

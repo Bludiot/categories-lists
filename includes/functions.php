@@ -103,7 +103,7 @@ function cats_by_count() {
 		return false;
 	}
 	usort( $categories->db, function( $a, $b ) {
-		return count( $a['list'] ) < count( $b['list'] );
+		return count( $b['list'] ) <=> count( $a['list'] );
 	} );
 	return $categories->db;
 }
@@ -136,12 +136,6 @@ function selected_cats() {
 			]
 		];
 		$cats = array_merge( $cats, $select );
-	}
-
-	if ( 'count' == plugin()->sort_by() ) {
-		usort( $cats, function( $a, $b ) {
-			return count( $a['list'] ) < count( $b['list'] );
-		} );
 	}
 	return $cats;
 }
@@ -318,13 +312,13 @@ function sidebar_list() {
 			$L->get( 'No categories selected.' )
 		);
 		return $html;
-	} elseif ( checkRole( [ 'admin' ], false ) && 'select' == plugin()->display() && ! getCategory( $order[0] ) ) {
+	} elseif ( checkRole( [ 'admin' ], false ) && 'select' == plugin()->display() && array_key_exists( 0, $order ) && ! getCategory( $order[0] ) ) {
 		$html .= sprintf(
 			'<p>%s</p></div>',
 			$L->get( 'Sort categories to display.' )
 		);
 		return $html;
-	} elseif ( 'select' == plugin()->display() && ( ! getCategory( $order[0] ) || ! selected_cats() ) ) {
+	} elseif ( 'select' == plugin()->display() && array_key_exists( 0, $order ) && ( ! getCategory( $order[0] ) || ! selected_cats() ) ) {
 		return;
 	}
 	$html .= sprintf(

@@ -306,19 +306,8 @@ function sidebar_list() {
 			$html .= plugin()->label();
 		}
 	}
-	if ( checkRole( [ 'admin' ], false ) && 'select' == plugin()->display() && ! selected_cats() ) {
-		$html .= sprintf(
-			'<p>%s</p></div>',
-			$L->get( 'No categories selected.' )
-		);
-		return $html;
-	} elseif ( checkRole( [ 'admin' ], false ) && 'select' == plugin()->display() && array_key_exists( 0, $order ) && ! getCategory( $order[0] ) ) {
-		$html .= sprintf(
-			'<p>%s</p></div>',
-			$L->get( 'Sort categories to display.' )
-		);
-		return $html;
-	} elseif ( 'select' == plugin()->display() && array_key_exists( 0, $order ) && ( ! getCategory( $order[0] ) || ! selected_cats() ) ) {
+
+	if ( 'select' == plugin()->display() && array_key_exists( 0, $order ) && ( ! getCategory( $order[0] ) || ! selected_cats() ) ) {
 		return;
 	}
 	$html .= sprintf(
